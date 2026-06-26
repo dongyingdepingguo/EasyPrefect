@@ -1,0 +1,96 @@
+services:
+  database:
+    image: ${EASYPREFECT_POSTGRES_IMAGE:-postgres:15}
+    container_name: easyprefect-db
+    restart: always
+    command: postgres -c timezone=Asia/Shanghai
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Asia/Shanghai
+      PGTZ: Asia/Shanghai
+    volumes:
+      - ../data/postgresql/data:/var/lib/postgresql/data
+    networks:
+      - easy_prefect_default
+
+  prefect-server:
+    image: ${EASYPREFECT_SERVER_IMAGE:-prefecthq/prefect:3-latest}
+    container_name: easyprefect-server
+    restart: always
+    command: prefect server start --host 0.0.0.0
+    environment:
+      TZ: Asia/Shanghai
+      PREFECT_UI_API_URL: ${PREFECT_UI_API_URL}
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+    ports:
+      - "4200:4200"
+    depends_on:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:4200/api/health', timeout=5)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - easy_prefect_default
+
+  prefect-deploy:
+    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.2.212:5080/oak-quant/workflow-scheduling/easy-prefect-runtime:local}
+    profiles:
+      - deploy
+    env_file:
+      - path: .env
+        required: false
+    command: >
+      sh -c "
+      prefect work-pool create default-process-pool --type process || true &&
+      python scripts/deploy_work_pool.py
+      "
+    environment:
+      TZ: Asia/Shanghai
+      PYTHONPATH: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      PREFECT_API_URL: http://prefect-server:4200/api
+      EASYPREFECT_DOCKER_HOST_ROOT: ${EASYPREFECT_DOCKER_HOST_ROOT}
+    volumes:
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}:${EASYPREFECT_DOCKER_HOST_ROOT}:ro
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:${EASYPREFECT_DOCKER_HOST_ROOT}/data:rw
+    working_dir: ${EASYPREFECT_DOCKER_HOST_ROOT}
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    networks:
+      - easy_prefect_default
+
+  process-worker-main:
+    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.2.212:5080/oak-quant/workflow-scheduling/easy-prefect-runtime:local}
+    container_name: easyprefect-process-worker-main
+    restart: always
+    env_file:
+      - path: .env
+        required: false
+    command: >
+      sh -c "
+      prefect work-pool create default-process-pool --type process || true &&
+      prefect worker start --pool default-process-pool --type process
+      "
+    environment:
+      TZ: Asia/Shanghai
+      PYTHONPATH: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      PREFECT_API_URL: http://prefect-server:4200/api
+    volumes:
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}:${EASYPREFECT_DOCKER_HOST_ROOT}:ro
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:${EASYPREFECT_DOCKER_HOST_ROOT}/data:rw
+    working_dir: ${EASYPREFECT_DOCKER_HOST_ROOT}
+    depends_on:
+      prefect-server:
+        condition: service_healthy
+    networks:
+      - easy_prefect_default
+
+networks:
+  easy_prefect_default:
+    name: easy_prefect_default
+    driver: bridge

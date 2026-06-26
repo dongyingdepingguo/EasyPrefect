@@ -1,0 +1,18 @@
+prefect:
+  api_url: http://127.0.0.1:4200/api
+
+deploy:
+  enabled_modules:
+    - hello_world
+
+  pools:
+    default-process-pool:
+      type: process
+      job_variables:
+        env:
+          TZ: Asia/Shanghai
+          PYTHONPATH: /app
+          DO_NOT_TRACK: "1"
+          PREFECT_API_URL: "http://prefect-server:4200/api"
+        working_dir: /app
+        stream_output: true

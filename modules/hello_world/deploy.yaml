@@ -1,0 +1,12 @@
+module:
+  flow_name: hello_world_flow
+
+deployments:
+  - name: hello-world-every-minute
+    schedules:
+      - interval_seconds: 60
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - hello-world

@@ -1,0 +1,15 @@
+[project]
+name = "easyprefect"
+version = "0.1.0"
+description = "A minimal Prefect 3 project skeleton"
+requires-python = ">=3.14"
+dependencies = [
+    "prefect>=3.6.28",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+]
+
+[[tool.uv.index]]
+name = "tsinghua"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+default = true
