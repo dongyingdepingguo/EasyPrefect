@@ -1,0 +1,29 @@
+module:
+  flow_name: tushare_stock_basic_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_base_basic
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - list_date
+      - delist_date
+
+deployments:
+  - name: tushare-stock-basic
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - stock-basic
+      parameters:
+        ts_code: ""
+        exchange: ""
+        market: ""
+        is_hs: ""
+        list_status: L
+        timeout: 30

@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST_ROOT=""
 ENV_NAME=""
 COMPOSE_FILE=""
+RUNTIME_IMAGE_HISTORY_FILE=""
+RUNTIME_IMAGE_HISTORY_KEEP=3
 
 die() {
   echo "$*" >&2
@@ -79,6 +81,7 @@ configure_environment() {
   ENV_NAME="$(read_required_env_name "$HOST_ROOT/.env")"
   COMPOSE_FILE="$(compose_file_for_env "$HOST_ROOT" "$ENV_NAME")"
   [[ -f "$COMPOSE_FILE" ]] || die "未找到 docker compose 文件: $COMPOSE_FILE"
+  RUNTIME_IMAGE_HISTORY_FILE="$HOST_ROOT/data/.runtime-image-history"
 
   export EASYPREFECT_DOCKER_HOST_ROOT="$HOST_ROOT"
   cd "$HOST_ROOT"
@@ -95,11 +98,14 @@ usage() {
     只重新注册 Prefect deployment。
     适用于新增 module/flow，或修改 deploy.yaml/config.yaml 中的 cron、参数、
     标签、并发等配置。
+    不会重建 runtime 镜像；需要更新运行环境请使用 update。
 
   update
     更新 worker 运行环境并重建 process-worker-* 容器。
     ENV=dev 时会 build 本地 runtime 镜像；ENV=test/prod 时会 pull server compose
     中声明的 worker 镜像。完成后默认执行一次 deploy。
+    ENV=dev build 前会确保 Python 基础镜像已存在本地；不存在时才 pull。
+    ENV=dev 重建后会按创建时间清理历史 runtime 镜像，只保留最近 3 个。
 
 常用示例:
   ./flow-release.sh deploy --dry-run
@@ -138,31 +144,176 @@ has_arg() {
 }
 
 run_deploy() {
-  local build_args=()
-
-  if [[ "$ENV_NAME" == "dev" ]]; then
-    build_args=(--build)
-  fi
-
   if has_arg "--dry-run" "$@"; then
-    compose_deploy run --rm --no-deps "${build_args[@]}" prefect-deploy python scripts/deploy_work_pool.py "$@"
+    compose_deploy run --rm --no-deps prefect-deploy python scripts/deploy_work_pool.py "$@"
     return
   fi
 
-  compose_deploy run --rm "${build_args[@]}" prefect-deploy sh -c '
+  compose_deploy run --rm prefect-deploy sh -c '
     prefect work-pool create default-process-pool --type process || true
     exec python scripts/deploy_work_pool.py "$@"
   ' sh "$@"
 }
 
+runtime_image_ref() {
+  compose_deploy config | awk '
+    /^  prefect-deploy:/ {
+      in_service = 1
+      next
+    }
+    in_service && /^  [^[:space:]][^:]*:/ {
+      exit
+    }
+    in_service && /^[[:space:]]+image:/ {
+      image = $2
+      gsub(/^"|"$/, "", image)
+      print image
+      exit
+    }
+  '
+}
+
+python_base_image_ref() {
+  compose_deploy config | awk '
+    /^  prefect-deploy:/ {
+      in_service = 1
+      next
+    }
+    in_service && /^  [^[:space:]][^:]*:/ {
+      exit
+    }
+    in_service && /^[[:space:]]+build:/ {
+      in_build = 1
+      next
+    }
+    in_service && in_build && /^[[:space:]]+args:/ {
+      in_args = 1
+      next
+    }
+    in_service && in_build && in_args && /^[[:space:]]+PYTHON_IMAGE:/ {
+      sub(/^[[:space:]]+PYTHON_IMAGE:[[:space:]]*/, "")
+      gsub(/^"|"$/, "")
+      print
+      exit
+    }
+  '
+}
+
+docker_image_id() {
+  local image_ref="$1"
+
+  docker image inspect "$image_ref" --format '{{.Id}}' 2>/dev/null || true
+}
+
+ensure_local_docker_image() {
+  local image_ref="$1"
+
+  [[ -n "$image_ref" ]] || die "镜像名不能为空。"
+  if docker image inspect "$image_ref" >/dev/null 2>&1; then
+    echo "Python 基础镜像已存在本地: $image_ref"
+    return
+  fi
+
+  echo "本地未找到 Python 基础镜像，开始拉取: $image_ref"
+  docker pull "$image_ref"
+}
+
+short_image_id() {
+  local image_id="${1#sha256:}"
+
+  printf '%s\n' "${image_id:0:12}"
+}
+
+remember_runtime_image() {
+  local image_ref="$1"
+  local required="${2:-false}"
+  local image_id
+  local tmp_file
+
+  image_id="$(docker_image_id "$image_ref")"
+  if [[ -z "$image_id" ]]; then
+    [[ "$required" == "true" ]] && die "未找到 runtime 镜像: $image_ref"
+    return
+  fi
+
+  mkdir -p "$(dirname "$RUNTIME_IMAGE_HISTORY_FILE")"
+  tmp_file="${RUNTIME_IMAGE_HISTORY_FILE}.tmp.$$"
+  {
+    [[ -f "$RUNTIME_IMAGE_HISTORY_FILE" ]] && cat "$RUNTIME_IMAGE_HISTORY_FILE"
+    printf '%s\n' "$image_id"
+  } | awk 'NF && !seen[$0]++' >"$tmp_file"
+  mv "$tmp_file" "$RUNTIME_IMAGE_HISTORY_FILE"
+}
+
+list_runtime_image_history() {
+  local image_id
+  local created
+
+  [[ -f "$RUNTIME_IMAGE_HISTORY_FILE" ]] || return
+
+  while IFS= read -r image_id; do
+    [[ -n "$image_id" ]] || continue
+    created="$(docker image inspect "$image_id" --format '{{.Created}}' 2>/dev/null || true)"
+    [[ -n "$created" ]] && printf '%s\t%s\n' "$created" "$image_id"
+  done <"$RUNTIME_IMAGE_HISTORY_FILE"
+}
+
+cleanup_runtime_image_history() {
+  local runtime_image="${1:-}"
+  local current_image_id=""
+  local tmp_file="${RUNTIME_IMAGE_HISTORY_FILE}.tmp.$$"
+  local kept_count=0
+  local removed_count=0
+  local skipped_count=0
+  local created
+  local image_id
+
+  [[ -f "$RUNTIME_IMAGE_HISTORY_FILE" ]] || return
+
+  : >"$tmp_file"
+  if [[ -n "$runtime_image" ]]; then
+    current_image_id="$(docker_image_id "$runtime_image")"
+    if [[ -n "$current_image_id" ]]; then
+      printf '%s\n' "$current_image_id" >>"$tmp_file"
+      ((kept_count += 1))
+    fi
+  fi
+
+  while IFS=$'\t' read -r created image_id; do
+    [[ -n "$image_id" ]] || continue
+    [[ "$image_id" == "$current_image_id" ]] && continue
+    if ((kept_count < RUNTIME_IMAGE_HISTORY_KEEP)); then
+      printf '%s\n' "$image_id" >>"$tmp_file"
+      ((kept_count += 1))
+      continue
+    fi
+
+    if docker image rm "$image_id" >/dev/null 2>&1; then
+      echo "已删除历史 runtime 镜像: $(short_image_id "$image_id")"
+      ((removed_count += 1))
+    else
+      echo "跳过无法删除的历史 runtime 镜像: $(short_image_id "$image_id")" >&2
+      printf '%s\n' "$image_id" >>"$tmp_file"
+      ((skipped_count += 1))
+    fi
+  done < <(list_runtime_image_history | sort -r | awk -F '\t' '!seen[$2]++')
+
+  mv "$tmp_file" "$RUNTIME_IMAGE_HISTORY_FILE"
+  echo "runtime 镜像历史清理完成：保留 ${kept_count} 个，删除 ${removed_count} 个，跳过 ${skipped_count} 个。"
+}
+
 print_update_plan() {
   local worker_services=("$@")
+  local python_image=""
 
   echo "Dry run: update worker runtime"
   echo "ENV=$ENV_NAME"
   echo "Compose 文件: $COMPOSE_FILE"
   if [[ "$ENV_NAME" == "dev" ]]; then
+    python_image="$(python_base_image_ref)"
+    echo "将执行: 本地不存在时拉取 Python 基础镜像 ${python_image:-<无法解析>}"
     echo "将执行: docker compose build prefect-deploy ${worker_services[*]}"
+    echo "将执行: 按创建时间清理历史 runtime 镜像，只保留最近 ${RUNTIME_IMAGE_HISTORY_KEEP} 个"
   else
     echo "将执行: docker compose pull prefect-deploy ${worker_services[*]}"
   fi
@@ -174,6 +325,8 @@ run_update() {
   local skip_deploy=false
   local deploy_args=()
   local worker_services=()
+  local runtime_image=""
+  local python_image=""
   local arg
 
   for arg in "$@"; do
@@ -206,12 +359,23 @@ run_update() {
   fi
 
   if [[ "$ENV_NAME" == "dev" ]]; then
+    python_image="$(python_base_image_ref)"
+    [[ -n "$python_image" ]] || die "无法解析 Dockerfile 的 PYTHON_IMAGE 构建参数。"
+    ensure_local_docker_image "$python_image"
+    runtime_image="$(runtime_image_ref)"
+    [[ -n "$runtime_image" ]] || die "无法解析 prefect-deploy 的 runtime 镜像名。"
+    remember_runtime_image "$runtime_image"
     compose_deploy build prefect-deploy "${worker_services[@]}"
   else
     compose_deploy pull prefect-deploy "${worker_services[@]}"
   fi
 
   compose up -d --no-deps --force-recreate "${worker_services[@]}"
+
+  if [[ "$ENV_NAME" == "dev" ]]; then
+    remember_runtime_image "$runtime_image" true
+    cleanup_runtime_image_history "$runtime_image"
+  fi
 
   if [[ "$skip_deploy" != "true" ]]; then
     run_deploy "${deploy_args[@]}"
