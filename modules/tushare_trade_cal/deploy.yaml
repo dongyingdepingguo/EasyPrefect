@@ -1,6 +1,19 @@
 module:
   flow_name: tushare_trade_cal_flow
 
+runtime:
+  clickhouse:
+    enabled: false
+    table: ods_tushare_trade_cal
+    mode: upsert
+    version_column: _ingested_at
+    columns:
+      - exchange
+      - cal_date
+      - is_open
+      - pretrade_date
+      - _ingested_at
+
 deployments:
   - name: tushare-trade-cal-manual
     schedules: []

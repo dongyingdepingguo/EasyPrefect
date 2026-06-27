@@ -1,6 +1,15 @@
 prefect:
   api_url: http://127.0.0.1:4200/api
 
+clickhouse:
+  host: localhost
+  port: 8123
+  database: default
+  username: default
+  secure: false
+  connect_timeout: 10
+  send_receive_timeout: 300
+
 deploy:
   enabled_modules:
     - tushare_trade_cal

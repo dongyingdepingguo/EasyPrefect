@@ -54,6 +54,28 @@ http://127.0.0.1:4200
 `192.168.2.212:5080/oak-quant/workflow-scheduling/easy-prefect-runtime`，
 可通过 `REGISTRY_NAMESPACE` 或 `RUNTIME_IMAGE` 环境变量覆盖。
 
+## ClickHouse
+
+连接信息优先从 `.env` 读取，例如：
+
+```text
+CLICKHOUSE_HOST=localhost
+CLICKHOUSE_DB=default
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=
+CLICKHOUSE_HTTP_PORT=8123
+CLICKHOUSE_SECURE=false
+```
+
+验证连接：
+
+```bash
+uv run python scripts/check_clickhouse.py
+```
+
+各模块在自己的 `deploy.yaml` 中通过 `runtime.clickhouse` 声明落库表和写入模式。
+默认 `enabled: false`，确认目标表存在后再打开。
+
 ## 添加模块
 
 每个业务模块建议保持以下结构：

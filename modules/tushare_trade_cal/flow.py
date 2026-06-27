@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import datetime as dt
-import os
 from typing import Any
 
 import pandas as pd
 import tushare as ts
 from prefect import flow, get_run_logger
+
+from core.db import ClickHouseWriteConfig, write_dataframe
+from core.settings import env_value, module_runtime
 
 
 def _clean_trade_cal_params(
@@ -46,7 +48,7 @@ def tushare_trade_cal_flow(
     """获取 trade_cal 数据，并按字典列表返回结果。"""
 
     logger = get_run_logger()
-    token = os.environ.get("TUSHARE_TOKEN", "")
+    token = env_value("TUSHARE_TOKEN", default="") or ""
     pro = ts.pro_api(token=token, timeout=timeout)
     start_date = _default_start_date(start_date)
     params = _clean_trade_cal_params(
@@ -65,4 +67,15 @@ def tushare_trade_cal_flow(
         params,
         fields,
     )
+    write_config = ClickHouseWriteConfig.from_mapping(
+        module_runtime("tushare_trade_cal", "clickhouse")
+    )
+    written = write_dataframe(df, write_config)
+    if write_config.enabled:
+        logger.info(
+            "已写入 %s 条 trade_cal 数据到 ClickHouse 表 %s，模式=%s",
+            written,
+            write_config.table,
+            write_config.mode,
+        )
     return df.to_dict(orient="records")

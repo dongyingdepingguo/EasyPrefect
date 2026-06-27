@@ -1,6 +1,13 @@
 module:
   flow_name: tushare_income_vip_flow
 
+runtime:
+  clickhouse:
+    enabled: false
+    table: ods_tushare_income_vip
+    mode: upsert
+    version_column: _ingested_at
+
 deployments:
   - name: tushare-income-vip-manual
     schedules: []
