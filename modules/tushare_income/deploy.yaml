@@ -1,0 +1,22 @@
+module:
+  flow_name: tushare_income_vip_flow
+
+deployments:
+  - name: tushare-income-vip-manual
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - income
+      parameters:
+        ts_code: ""
+        ann_date: ""
+        f_ann_date: ""
+        start_date: ""
+        end_date: ""
+        period: ""
+        report_type: ""
+        comp_type: ""
+        timeout: 30

@@ -1,0 +1,19 @@
+module:
+  flow_name: tushare_trade_cal_flow
+
+deployments:
+  - name: tushare-trade-cal-manual
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - trade-cal
+      parameters:
+        exchange: SSE
+        start_date: ""
+        end_date: ""
+        is_open: ""
+        fields: exchange,cal_date,is_open,pretrade_date
+        timeout: 30
