@@ -1,0 +1,26 @@
+module:
+  flow_name: tushare_stk_rewards_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_base_rewards
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - ann_date
+      - end_date
+
+deployments:
+  - name: tushare-stk-rewards
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - stk-rewards
+      parameters:
+        ts_code: ""
+        end_date: ""
+        timeout: 30

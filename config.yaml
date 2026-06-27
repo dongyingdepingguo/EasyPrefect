@@ -15,6 +15,7 @@ deploy:
     - tushare_trade_cal
     - tushare_income
     - tushare_stock_basic
+    - tushare_stk_rewards
 
   pools:
     default-process-pool:
