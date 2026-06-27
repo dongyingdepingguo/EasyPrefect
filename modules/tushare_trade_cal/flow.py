@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
 
 import pandas as pd
 import tushare as ts
@@ -44,8 +43,17 @@ def tushare_trade_cal_flow(
     is_open: str = "",
     fields: str = "",
     timeout: int = 30,
-) -> list[dict[str, Any]]:
-    """获取 trade_cal 数据，并按字典列表返回结果。"""
+) -> None:
+    """获取 Tushare trade_cal 交易日历数据，并按配置写入 ClickHouse。
+
+    参数:
+        exchange: 交易所代码，例如 SSE 或 SZSE；为空时不按交易所过滤。
+        start_date: 起始日期，格式 YYYYMMDD；为空时默认使用运行当天。
+        end_date: 结束日期，格式 YYYYMMDD；为空时由 Tushare 接口默认处理。
+        is_open: 是否交易，1 表示交易日，0 表示休市日；为空时不过滤。
+        fields: Tushare 返回字段列表，多个字段用英文逗号分隔；为空时返回接口默认字段。
+        timeout: Tushare API 请求超时时间，单位为秒。
+    """
 
     logger = get_run_logger()
     token = env_value("TUSHARE_TOKEN", default="") or ""
@@ -78,4 +86,3 @@ def tushare_trade_cal_flow(
             write_config.table,
             write_config.mode,
         )
-    return df.to_dict(orient="records")

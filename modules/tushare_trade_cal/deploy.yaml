@@ -3,19 +3,22 @@ module:
 
 runtime:
   clickhouse:
-    enabled: false
-    table: ods_tushare_trade_cal
+    enabled: true
+    table: stock_base_trade_calendar
     mode: upsert
-    version_column: _ingested_at
+    version_column: updated_at
+    date_columns:
+      - cal_date
+      - pretrade_date
     columns:
       - exchange
       - cal_date
       - is_open
       - pretrade_date
-      - _ingested_at
+      - updated_at
 
 deployments:
-  - name: tushare-trade-cal-manual
+  - name: tushare-trade-cal
     schedules: []
     execution:
       pool: default-process-pool

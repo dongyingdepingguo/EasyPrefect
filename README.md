@@ -74,7 +74,8 @@ uv run python scripts/check_clickhouse.py
 ```
 
 各模块在自己的 `deploy.yaml` 中通过 `runtime.clickhouse` 声明落库表和写入模式。
-默认 `enabled: false`，确认目标表存在后再打开。
+`enabled` 控制该模块是否写入 ClickHouse；`date_columns` 可声明需要从
+`YYYYMMDD` 字符串转换为 ClickHouse `Date` 的字段。
 
 ## 添加模块
 
