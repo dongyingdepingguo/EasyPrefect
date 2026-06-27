@@ -3,7 +3,6 @@ prefect:
 
 deploy:
   enabled_modules:
-    - hello_world
     - tushare_trade_cal
     - tushare_income
 
