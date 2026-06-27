@@ -202,6 +202,11 @@ class ClickHouseClient:
             sql = f"{sql} LIMIT {limit}"
         return self.query_records(sql, parameters=parameters)
 
+    def table_columns(self, table: str) -> list[str]:
+        """Return column names for a ClickHouse table in physical order."""
+        rows = self.query_records(f"DESCRIBE TABLE {quote_table_name(table)}")
+        return [str(row["name"]) for row in rows if row.get("name")]
+
     def insert_records(
         self,
         table: str,

@@ -10,12 +10,6 @@ runtime:
     date_columns:
       - cal_date
       - pretrade_date
-    columns:
-      - exchange
-      - cal_date
-      - is_open
-      - pretrade_date
-      - updated_at
 
 deployments:
   - name: tushare-trade-cal
@@ -31,5 +25,4 @@ deployments:
         start_date: ""
         end_date: ""
         is_open: ""
-        fields: exchange,cal_date,is_open,pretrade_date
         timeout: 30

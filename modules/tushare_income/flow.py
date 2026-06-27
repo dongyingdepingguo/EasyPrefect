@@ -63,7 +63,7 @@ def _default_period(period: str | None) -> str:
 
 
 @flow(name="Tushare 利润表 VIP")
-def tushare_income_vip_flow(
+def tushare_income_flow(
     ts_code: str = "",
     ann_date: str = "",
     f_ann_date: str = "",

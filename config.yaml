@@ -14,6 +14,7 @@ deploy:
   enabled_modules:
     - tushare_trade_cal
     - tushare_income
+    - tushare_stock_basic
 
   pools:
     default-process-pool:

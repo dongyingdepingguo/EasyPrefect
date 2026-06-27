@@ -7,13 +7,10 @@ import pandas as pd
 import tushare as ts
 from prefect import flow, get_run_logger
 
-from core.db import ClickHouseWriteConfig, write_dataframe
+from core.db import ClickHouseClient, ClickHouseWriteConfig, write_dataframe
 from core.settings import env_value, module_runtime
 
-DEFAULT_STOCK_BASIC_FIELDS = (
-    "ts_code,symbol,name,area,industry,fullname,enname,cnspell,market,exchange,"
-    "curr_type,list_status,list_date,delist_date,is_hs,act_name,act_ent_type"
-)
+OPTIONAL_STOCK_BASIC_COLUMNS = ("delist_date",)
 
 
 def _clean_stock_basic_params(
@@ -36,6 +33,34 @@ def _clean_stock_basic_params(
         for key, value in params.items()
         if value is not None and value.strip()
     }
+
+
+def _ensure_optional_stock_basic_columns(df: pd.DataFrame) -> pd.DataFrame:
+    missing_columns = [
+        column for column in OPTIONAL_STOCK_BASIC_COLUMNS if column not in df.columns
+    ]
+    if not missing_columns:
+        return df
+
+    result = df.copy()
+    for column in missing_columns:
+        result[column] = None
+    return result
+
+
+def _stock_basic_fields_from_clickhouse(config: ClickHouseWriteConfig) -> str:
+    if not config.enabled:
+        return ""
+
+    with ClickHouseClient() as client:
+        columns = client.table_columns(config.table)
+
+    excluded_columns = {config.version_column}
+    fields = [column for column in columns if column not in excluded_columns]
+    if not fields:
+        raise ValueError(f"ClickHouse 表 {config.table} 未解析到可用于 Tushare 的字段")
+    return ",".join(fields)
+
 
 @flow(name="Tushare 股票基础信息")
 def tushare_stock_basic_flow(
@@ -60,6 +85,10 @@ def tushare_stock_basic_flow(
     logger = get_run_logger()
     token = env_value("TUSHARE_TOKEN", default="") or ""
     pro = ts.pro_api(token=token, timeout=timeout)
+    write_config = ClickHouseWriteConfig.from_mapping(
+        module_runtime("tushare_stock_basic", "clickhouse")
+    )
+    fields = _stock_basic_fields_from_clickhouse(write_config)
     params = _clean_stock_basic_params(
         ts_code=ts_code,
         exchange=exchange,
@@ -67,17 +96,19 @@ def tushare_stock_basic_flow(
         is_hs=is_hs,
         list_status=list_status,
     )
-    df = pro.stock_basic(**params)
+    if fields:
+        df = pro.stock_basic(**params, fields=fields)
+    else:
+        df = pro.stock_basic(**params)
     if not isinstance(df, pd.DataFrame):
         raise TypeError(f"stock_basic 返回了非预期类型: {type(df)!r}")
 
+    df = _ensure_optional_stock_basic_columns(df)
     logger.info(
         "已获取 %s 条 Tushare stock_basic 数据，参数=%s，字段=%r",
         len(df),
         params,
-    )
-    write_config = ClickHouseWriteConfig.from_mapping(
-        module_runtime("tushare_stock_basic", "clickhouse")
+        list(df.columns),
     )
     written = write_dataframe(df, write_config)
     if write_config.enabled:
