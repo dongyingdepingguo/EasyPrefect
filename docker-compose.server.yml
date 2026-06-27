@@ -1,6 +1,6 @@
 services:
   database:
-    image: ${EASYPREFECT_POSTGRES_IMAGE:-postgres:15}
+    image: ${EASYPREFECT_POSTGRES_IMAGE}
     container_name: easyprefect-db
     restart: always
     command: postgres -c timezone=Asia/Shanghai
@@ -16,7 +16,7 @@ services:
       - easy_prefect_default
 
   prefect-server:
-    image: ${EASYPREFECT_SERVER_IMAGE:-prefecthq/prefect:3-latest}
+    image: ${EASYPREFECT_SERVER_IMAGE}
     container_name: easyprefect-server
     restart: always
     command: prefect server start --host 0.0.0.0

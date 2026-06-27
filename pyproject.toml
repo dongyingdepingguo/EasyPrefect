@@ -10,6 +10,6 @@ dependencies = [
 ]
 
 [[tool.uv.index]]
-name = "tsinghua"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
 default = true

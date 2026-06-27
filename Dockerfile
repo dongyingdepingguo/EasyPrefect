@@ -6,8 +6,8 @@ WORKDIR /app
 
 ENV UV_LINK_MODE=copy \
     PIP_NO_CACHE_DIR=1 \
-    PIP_INDEX_URL=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple \
-    UV_DEFAULT_INDEX=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple \
+    PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple \
+    UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple \
     UV_PROJECT_ENVIRONMENT=/opt/venv
 
 RUN python -m pip install --no-cache-dir uv
