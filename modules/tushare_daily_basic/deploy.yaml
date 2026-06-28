@@ -1,0 +1,27 @@
+module:
+  flow_name: tushare_daily_basic_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_market_daily_basic
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - trade_date
+
+deployments:
+  - name: tushare-daily-basic
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - daily-basic
+      parameters:
+        ts_code: ""
+        trade_date: ""
+        start_date: ""
+        end_date: ""
+        timeout: 30

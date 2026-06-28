@@ -1,0 +1,29 @@
+module:
+  flow_name: tushare_fina_indicator_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_fina_indicator
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - end_date
+      - ann_date
+
+deployments:
+  - name: tushare-fina-indicator
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - fina_indicator
+      parameters:
+        ts_code: ""
+        ann_date: ""
+        start_date: ""
+        end_date: ""
+        period: ""
+        timeout: 30

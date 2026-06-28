@@ -1,0 +1,28 @@
+module:
+  flow_name: tushare_fina_mainbz_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_fina_mainbz
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - end_date
+
+deployments:
+  - name: tushare-fina-mainbz
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - fina_mainbz
+      parameters:
+        ts_code: ""
+        start_date: ""
+        end_date: ""
+        period: ""
+        bz_code: ""
+        timeout: 30

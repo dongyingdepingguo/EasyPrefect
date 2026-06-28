@@ -13,9 +13,16 @@ clickhouse:
 deploy:
   enabled_modules:
     - tushare_trade_cal
+    - tushare_daily_basic
+    - tushare_stk_week_month_adj
     - tushare_income
+    - tushare_balancesheet
+    - tushare_cashflow
+    - tushare_fina_indicator
+    - tushare_fina_mainbz
     - tushare_stock_basic
     - tushare_stk_rewards
+    - tushare_dividend
 
   pools:
     default-process-pool:
