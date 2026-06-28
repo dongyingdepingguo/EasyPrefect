@@ -12,8 +12,11 @@ runtime:
       - end_date
 
 deployments:
-  - name: tushare-stk-week-adj
-    schedules: []
+  - id: tushare-stk-week-adj
+    name: 股票-周线复权行情
+    schedules:
+      - cron: "0 20 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1
@@ -29,8 +32,11 @@ deployments:
         freq: week
         timeout: 30
 
-  - name: tushare-stk-month-adj
-    schedules: []
+  - id: tushare-stk-month-adj
+    name: 股票-月线复权行情
+    schedules:
+      - cron: "10 20 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

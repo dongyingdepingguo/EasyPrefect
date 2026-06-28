@@ -39,24 +39,19 @@ def _clean_fina_mainbz_vip_params(
     }
 
 
-def _previous_quarter_end_date(run_date: dt.date | None = None) -> str:
+def _current_quarter_end_date(run_date: dt.date | None = None) -> str:
     run_date = run_date or dt.date.today()
     current_quarter = (run_date.month - 1) // 3 + 1
-    if current_quarter == 1:
-        year = run_date.year - 1
-        month = 12
-    else:
-        year = run_date.year
-        month = (current_quarter - 1) * 3
+    month = current_quarter * 3
 
-    day = calendar.monthrange(year, month)[1]
-    return dt.date(year, month, day).strftime("%Y%m%d")
+    day = calendar.monthrange(run_date.year, month)[1]
+    return dt.date(run_date.year, month, day).strftime("%Y%m%d")
 
 
 def _default_period(period: str | None) -> str:
     if period and period.strip():
         return period.strip()
-    return _previous_quarter_end_date()
+    return _current_quarter_end_date()
 
 
 def _fina_mainbz_fields_from_clickhouse(config: ClickHouseWriteConfig) -> str:
@@ -116,7 +111,7 @@ def tushare_fina_mainbz_flow(
         ts_code: 股票 TS 代码，例如 000001.SZ；为空时不按股票过滤。
         start_date: 报告期起始日期，格式 YYYYMMDD；为空时不设置报告期区间起点。
         end_date: 报告期结束日期，格式 YYYYMMDD；为空时不设置报告期区间终点。
-        period: 报告期，格式 YYYYMMDD；为空时默认取上一季度末日期。
+        period: 报告期，格式 YYYYMMDD；为空时默认取当前季度末日期。
         bz_code: 主营业务来源类型，P 按产品、D 按地区、I 按行业；为空时不按类型过滤。
         timeout: Tushare API 请求超时时间，单位为秒。
     """

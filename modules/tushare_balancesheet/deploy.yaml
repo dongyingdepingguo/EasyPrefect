@@ -13,8 +13,11 @@ runtime:
       - f_ann_date
 
 deployments:
-  - name: tushare-balancesheet
-    schedules: []
+  - id: tushare-balancesheet
+    name: 财务-资产负债表
+    schedules:
+      - cron: "32 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

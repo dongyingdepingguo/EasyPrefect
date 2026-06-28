@@ -1,32 +1,30 @@
 module:
-  flow_name: tushare_fina_indicator_flow
+  flow_name: tushare_ci_daily_flow
 
 runtime:
   clickhouse:
     enabled: true
-    table: stock_fina_indicator
+    table: ci_daily
     mode: upsert
     version_column: updated_at
     date_columns:
-      - end_date
-      - ann_date
+      - trade_date
 
 deployments:
-  - id: tushare-fina-indicator
-    name: 财务-财务主要指标
+  - id: tushare-ci-daily
+    name: 中信行业-日线行情
     schedules:
-      - cron: "40 6 * * *"
+      - cron: "0 18 * * 1-5"
         timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1
       tags:
         - tushare
-        - fina_indicator
+        - ci-daily
       parameters:
         ts_code: ""
-        ann_date: ""
+        trade_date: ""
         start_date: ""
         end_date: ""
-        period: ""
         timeout: 30

@@ -12,8 +12,11 @@ runtime:
       - float_date
 
 deployments:
-  - name: tushare-share-float
-    schedules: []
+  - id: tushare-share-float
+    name: 股票-限售股解禁
+    schedules:
+      - cron: "56 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

@@ -11,8 +11,11 @@ runtime:
       - trade_date
 
 deployments:
-  - name: tushare-index-monthly
-    schedules: []
+  - id: tushare-index-monthly
+    name: 指数-月线行情
+    schedules:
+      - cron: "30 20 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

@@ -12,8 +12,11 @@ runtime:
       - out_date
 
 deployments:
-  - name: tushare-index-member-all
-    schedules: []
+  - id: tushare-index-member-all
+    name: 申万行业-成分
+    schedules:
+      - cron: "0 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

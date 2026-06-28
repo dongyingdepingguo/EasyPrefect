@@ -32,6 +32,14 @@ deploy:
     - tushare_index_weekly
     - tushare_index_monthly
     - tushare_index_member_all
+    - tushare_sw_daily
+    - tushare_ci_index_member
+    - tushare_ci_daily
+    - tushare_cn_cpi
+    - tushare_cn_m
+    - tushare_cn_ppi
+    - tushare_sf_month
+    - tushare_cn_pmi
 
   pools:
     default-process-pool:

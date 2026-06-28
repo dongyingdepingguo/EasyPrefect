@@ -12,8 +12,11 @@ runtime:
       - delist_date
 
 deployments:
-  - name: tushare-stock-basic
-    schedules: []
+  - id: tushare-stock-basic
+    name: 股票-基础信息
+    schedules:
+      - cron: "15 0 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

@@ -18,8 +18,11 @@ runtime:
       - base_date
 
 deployments:
-  - name: tushare-dividend
-    schedules: []
+  - id: tushare-dividend
+    name: 股票-分红送股
+    schedules:
+      - cron: "48 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

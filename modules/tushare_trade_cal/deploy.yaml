@@ -12,8 +12,11 @@ runtime:
       - pretrade_date
 
 deployments:
-  - name: tushare-trade-cal
-    schedules: []
+  - id: tushare-trade-cal
+    name: 市场-交易日历
+    schedules:
+      - cron: "5 0 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

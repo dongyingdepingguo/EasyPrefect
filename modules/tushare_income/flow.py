@@ -42,24 +42,19 @@ def _clean_income_vip_params(
     }
 
 
-def _previous_quarter_end_date(run_date: dt.date | None = None) -> str:
+def _current_quarter_end_date(run_date: dt.date | None = None) -> str:
     run_date = run_date or dt.date.today()
     current_quarter = (run_date.month - 1) // 3 + 1
-    if current_quarter == 1:
-        year = run_date.year - 1
-        month = 12
-    else:
-        year = run_date.year
-        month = (current_quarter - 1) * 3
+    month = current_quarter * 3
 
-    day = calendar.monthrange(year, month)[1]
-    return dt.date(year, month, day).strftime("%Y%m%d")
+    day = calendar.monthrange(run_date.year, month)[1]
+    return dt.date(run_date.year, month, day).strftime("%Y%m%d")
 
 
 def _default_period(period: str | None) -> str:
     if period and period.strip():
         return period.strip()
-    return _previous_quarter_end_date()
+    return _current_quarter_end_date()
 
 
 @flow(name="Tushare 利润表 VIP")
@@ -82,7 +77,7 @@ def tushare_income_flow(
         f_ann_date: 实际公告日期，格式 YYYYMMDD；为空时不按实际公告日期过滤。
         start_date: 公告起始日期，格式 YYYYMMDD；为空时不设置公告区间起点。
         end_date: 公告结束日期，格式 YYYYMMDD；为空时不设置公告区间终点。
-        period: 报告期，格式 YYYYMMDD；为空时默认取上一季度末日期。
+        period: 报告期，格式 YYYYMMDD；为空时默认取当前季度末日期。
         report_type: 报告类型；为空时不按报告类型过滤。
         comp_type: 公司类型，1 一般工商业，2 银行，3 保险，4 证券；为空时不按公司类型过滤。
         timeout: Tushare API 请求超时时间，单位为秒。

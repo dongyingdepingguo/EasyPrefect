@@ -11,8 +11,11 @@ runtime:
       - trade_date
 
 deployments:
-  - name: tushare-cyq-perf
-    schedules: []
+  - id: tushare-cyq-perf
+    name: 股票-筹码胜率
+    schedules:
+      - cron: "20 19 * * 1-5"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

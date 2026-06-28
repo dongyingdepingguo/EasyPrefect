@@ -13,8 +13,11 @@ runtime:
       - f_ann_date
 
 deployments:
-  - name: tushare-income
-    schedules: []
+  - id: tushare-income
+    name: 财务-利润表
+    schedules:
+      - cron: "28 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

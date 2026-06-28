@@ -12,8 +12,11 @@ runtime:
       - end_date
 
 deployments:
-  - name: tushare-stk-rewards
-    schedules: []
+  - id: tushare-stk-rewards
+    name: 股票-管理层薪酬持股
+    schedules:
+      - cron: "52 6 * * *"
+        timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1

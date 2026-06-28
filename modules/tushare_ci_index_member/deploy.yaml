@@ -1,32 +1,32 @@
 module:
-  flow_name: tushare_fina_indicator_flow
+  flow_name: tushare_ci_index_member_flow
 
 runtime:
   clickhouse:
     enabled: true
-    table: stock_fina_indicator
+    table: ci_index_member
     mode: upsert
     version_column: updated_at
     date_columns:
-      - end_date
-      - ann_date
+      - in_date
+      - out_date
 
 deployments:
-  - id: tushare-fina-indicator
-    name: 财务-财务主要指标
+  - id: tushare-ci-index-member
+    name: 中信行业-成分
     schedules:
-      - cron: "40 6 * * *"
+      - cron: "4 6 * * *"
         timezone: Asia/Shanghai
     execution:
       pool: default-process-pool
       concurrency_limit: 1
       tags:
         - tushare
-        - fina_indicator
+        - ci-index-member
       parameters:
+        l1_code: ""
+        l2_code: ""
+        l3_code: ""
         ts_code: ""
-        ann_date: ""
-        start_date: ""
-        end_date: ""
-        period: ""
+        is_new: ""
         timeout: 30
