@@ -23,6 +23,7 @@ deploy:
     - tushare_stock_basic
     - tushare_stk_rewards
     - tushare_dividend
+    - tushare_stk_factor_pro
 
   pools:
     default-process-pool:
