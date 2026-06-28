@@ -10,7 +10,7 @@ SERVER_COMPOSE_FILE="${SERVER_COMPOSE_FILE:-docker-compose.server.yml}"
 REGISTRY_NAMESPACE="${REGISTRY_NAMESPACE:-dongyingdepingguo}"
 RUNTIME_IMAGE="${RUNTIME_IMAGE:-$REGISTRY_NAMESPACE/easy-prefect-runtime}"
 PYTHON_IMAGE="${PYTHON_IMAGE:-python:3.14-slim}"
-EXPECTED_WORKER_IMAGE_DEFAULTS=2
+EXPECTED_WORKER_IMAGE_LINES=2
 
 die() {
     echo "$*" >&2
@@ -132,22 +132,28 @@ update_compose_images() {
 
     if awk \
         -v runtime_image_ref="$runtime_image_ref" \
-        -v expected_worker="$EXPECTED_WORKER_IMAGE_DEFAULTS" '
+        -v expected_worker="$EXPECTED_WORKER_IMAGE_LINES" '
         BEGIN {
-            worker_pattern = "[$][{]EASYPREFECT_WORKER_IMAGE:-[^}]+[}]"
-            worker_replacement = "${EASYPREFECT_WORKER_IMAGE:-" runtime_image_ref "}"
+            target_service["prefect-deploy"] = 1
+            target_service["process-worker-main"] = 1
         }
         {
             line = $0
-            if (line ~ worker_pattern) {
-                gsub(worker_pattern, worker_replacement, line)
+            if (line ~ /^  [A-Za-z0-9_-]+:[[:space:]]*$/) {
+                service_name = line
+                sub(/^  /, "", service_name)
+                sub(/:[[:space:]]*$/, "", service_name)
+                in_target_service = service_name in target_service
+            }
+            if (in_target_service && line ~ /^    image:[[:space:]]*/) {
+                line = "    image: " runtime_image_ref
                 worker_count++
             }
             print line
         }
         END {
             if (worker_count != expected_worker) {
-                printf "%s 中 EASYPREFECT_WORKER_IMAGE 默认值数量异常: 期望 %d，实际 %d\n", FILENAME, expected_worker, worker_count > "/dev/stderr"
+                printf "%s 中 worker image 行数量异常: 期望 %d，实际 %d\n", FILENAME, expected_worker, worker_count > "/dev/stderr"
                 exit 42
             }
         }
@@ -158,7 +164,7 @@ update_compose_images() {
         rm -f "$tmp_file"
 
         if [[ "$rc" == "42" ]]; then
-            die "$SERVER_COMPOSE_FILE 镜像默认值结构与预期不一致，已停止发布。"
+            die "$SERVER_COMPOSE_FILE worker 镜像结构与预期不一致，已停止发布。"
         fi
 
         die "更新 $SERVER_COMPOSE_FILE 失败。"

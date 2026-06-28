@@ -38,7 +38,7 @@ services:
       - easy_prefect_default
 
   prefect-deploy:
-    image: ongyingdepingguo/easy-prefect-runtime:latest
+    image: dongyingdepingguo/easy-prefect-runtime:latest
     pull_policy: always
     profiles:
       - deploy
