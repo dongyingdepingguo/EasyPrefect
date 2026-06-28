@@ -1,0 +1,27 @@
+module:
+  flow_name: tushare_cyq_perf_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_cyq_perf
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - trade_date
+
+deployments:
+  - name: tushare-cyq-perf
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - cyq-perf
+      parameters:
+        ts_code: ""
+        trade_date: ""
+        start_date: ""
+        end_date: ""
+        timeout: 30

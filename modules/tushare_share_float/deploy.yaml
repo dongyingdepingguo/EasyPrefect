@@ -1,0 +1,29 @@
+module:
+  flow_name: tushare_share_float_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: stock_share_float
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - ann_date
+      - float_date
+
+deployments:
+  - name: tushare-share-float
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - share-float
+      parameters:
+        ts_code: ""
+        trade_date: ""
+        ann_date: ""
+        start_date: ""
+        end_date: ""
+        timeout: 30

@@ -24,6 +24,9 @@ deploy:
     - tushare_stk_rewards
     - tushare_dividend
     - tushare_stk_factor_pro
+    - tushare_cyq_chips
+    - tushare_cyq_perf
+    - tushare_share_float
 
   pools:
     default-process-pool:
