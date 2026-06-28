@@ -12,8 +12,8 @@ ENV UV_LINK_MODE=copy \
 
 RUN python -m pip install --no-cache-dir uv
 
-COPY pyproject.toml ./
-RUN uv sync --no-dev --no-install-project
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
 
 FROM ${PYTHON_IMAGE} AS runtime
 

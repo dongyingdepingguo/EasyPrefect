@@ -38,7 +38,8 @@ services:
       - easy_prefect_default
 
   prefect-deploy:
-    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.2.212:5080/oak-quant/workflow-scheduling/easy-prefect-runtime:local}
+    image: ongyingdepingguo/easy-prefect-runtime:latest
+    pull_policy: always
     profiles:
       - deploy
     env_file:
@@ -51,13 +52,13 @@ services:
       "
     environment:
       TZ: Asia/Shanghai
-      PYTHONPATH: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      PYTHONPATH: /app
       PREFECT_API_URL: http://prefect-server:4200/api
       EASYPREFECT_DOCKER_HOST_ROOT: ${EASYPREFECT_DOCKER_HOST_ROOT}
     volumes:
-      - ${EASYPREFECT_DOCKER_HOST_ROOT}:${EASYPREFECT_DOCKER_HOST_ROOT}:ro
-      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:${EASYPREFECT_DOCKER_HOST_ROOT}/data:rw
-    working_dir: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}:/app:ro
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:/app/data:rw
+    working_dir: /app
     depends_on:
       prefect-server:
         condition: service_healthy
@@ -65,7 +66,8 @@ services:
       - easy_prefect_default
 
   process-worker-main:
-    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.2.212:5080/oak-quant/workflow-scheduling/easy-prefect-runtime:local}
+    image: dongyingdepingguo/easy-prefect-runtime:latest
+    pull_policy: always
     container_name: easyprefect-process-worker-main
     restart: always
     env_file:
@@ -78,12 +80,12 @@ services:
       "
     environment:
       TZ: Asia/Shanghai
-      PYTHONPATH: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      PYTHONPATH: /app
       PREFECT_API_URL: http://prefect-server:4200/api
     volumes:
-      - ${EASYPREFECT_DOCKER_HOST_ROOT}:${EASYPREFECT_DOCKER_HOST_ROOT}:ro
-      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:${EASYPREFECT_DOCKER_HOST_ROOT}/data:rw
-    working_dir: ${EASYPREFECT_DOCKER_HOST_ROOT}
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}:/app:ro
+      - ${EASYPREFECT_DOCKER_HOST_ROOT}/data:/app/data:rw
+    working_dir: /app
     depends_on:
       prefect-server:
         condition: service_healthy
