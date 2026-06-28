@@ -28,6 +28,10 @@ deploy:
     - tushare_cyq_perf
     - tushare_share_float
     - tushare_index_basic
+    - tushare_index_daily
+    - tushare_index_weekly
+    - tushare_index_monthly
+    - tushare_index_member_all
 
   pools:
     default-process-pool:

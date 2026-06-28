@@ -1,0 +1,33 @@
+module:
+  flow_name: tushare_index_daily_flow
+
+runtime:
+  source:
+    index_basic_table: index_base_basic
+    markets:
+      - CSI
+      - SSE
+      - SZSE
+  clickhouse:
+    enabled: true
+    table: index_market_daily
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - trade_date
+
+deployments:
+  - name: tushare-index-daily
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - index-daily
+      parameters:
+        trade_date: ""
+        start_date: ""
+        end_date: ""
+        timeout: 30
+

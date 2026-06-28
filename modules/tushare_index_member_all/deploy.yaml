@@ -1,0 +1,29 @@
+module:
+  flow_name: tushare_index_member_all_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: index_member_all
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - in_date
+      - out_date
+
+deployments:
+  - name: tushare-index-member-all
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - index-member-all
+      parameters:
+        l1_code: ""
+        l2_code: ""
+        l3_code: ""
+        ts_code: ""
+        is_new: ""
+        timeout: 30
