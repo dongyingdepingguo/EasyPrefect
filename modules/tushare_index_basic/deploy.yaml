@@ -1,0 +1,29 @@
+module:
+  flow_name: tushare_index_basic_flow
+
+runtime:
+  clickhouse:
+    enabled: true
+    table: index_base_basic
+    mode: upsert
+    version_column: updated_at
+    date_columns:
+      - base_date
+      - list_date
+      - exp_date
+
+deployments:
+  - name: tushare-index-basic
+    schedules: []
+    execution:
+      pool: default-process-pool
+      concurrency_limit: 1
+      tags:
+        - tushare
+        - index-basic
+      parameters:
+        ts_code: ""
+        name: ""
+        publisher: ""
+        category: ""
+        timeout: 30

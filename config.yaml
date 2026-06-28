@@ -27,6 +27,7 @@ deploy:
     - tushare_cyq_chips
     - tushare_cyq_perf
     - tushare_share_float
+    - tushare_index_basic
 
   pools:
     default-process-pool:
