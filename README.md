@@ -51,7 +51,7 @@ http://127.0.0.1:4200
 ```
 
 `release-image.sh` 默认发布到
-`dongyingdepingguo/easy-prefect-runtime`，
+`192.168.50.224:8088/easyprefect/easy-prefect-runtime`，
 可通过 `REGISTRY_NAMESPACE` 或 `RUNTIME_IMAGE` 环境变量覆盖。
 
 ## ClickHouse

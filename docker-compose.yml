@@ -38,7 +38,7 @@ services:
       - easy_prefect_default
 
   prefect-deploy:
-    image: ${EASYPREFECT_WORKER_IMAGE:-easy-prefect-runtime:local}
+    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.50.224:8088/easyprefect/easy-prefect-runtime:local}
     build:
       context: .
       dockerfile: Dockerfile
@@ -70,7 +70,7 @@ services:
       - easy_prefect_default
 
   process-worker-main:
-    image: ${EASYPREFECT_WORKER_IMAGE:-easy-prefect-runtime:local}
+    image: ${EASYPREFECT_WORKER_IMAGE:-192.168.50.224:8088/easyprefect/easy-prefect-runtime:local}
     build:
       context: .
       dockerfile: Dockerfile

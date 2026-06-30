@@ -38,7 +38,7 @@ services:
       - easy_prefect_default
 
   prefect-deploy:
-    image: dongyingdepingguo/easy-prefect-runtime:1.0.0-d3e05d34
+    image: 192.168.50.224:8088/easyprefect/easy-prefect-runtime:1.0.0-d3e05d34
     pull_policy: always
     profiles:
       - deploy
@@ -66,7 +66,7 @@ services:
       - easy_prefect_default
 
   process-worker-main:
-    image: dongyingdepingguo/easy-prefect-runtime:1.0.0-d3e05d34
+    image: 192.168.50.224:8088/easyprefect/easy-prefect-runtime:1.0.0-d3e05d34
     pull_policy: always
     container_name: easyprefect-process-worker-main
     restart: always
