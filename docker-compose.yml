@@ -85,7 +85,7 @@ services:
     command: >
       sh -c "
       prefect work-pool create default-process-pool --type process || true &&
-      prefect worker start --pool default-process-pool --type process
+      prefect worker start --name process-worker-main --pool default-process-pool --type process
       "
     environment:
       TZ: Asia/Shanghai
