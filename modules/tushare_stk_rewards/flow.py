@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import time
 from typing import Any
 
 import pandas as pd
@@ -14,6 +15,10 @@ from core.db import ClickHouseClient, ClickHouseWriteConfig, write_dataframe
 from core.settings import env_value, module_runtime
 
 METADATA_COLUMNS = {"created_at"}
+STK_REWARDS_MAX_REQUESTS_PER_MINUTE = 500
+STK_REWARDS_REQUEST_INTERVAL_SECONDS = (
+    60 / STK_REWARDS_MAX_REQUESTS_PER_MINUTE + 0.01
+)
 STOCK_BASIC_TABLE = "stock_base_basic"
 
 
@@ -142,6 +147,8 @@ def tushare_stk_rewards_flow(
                 empty_template = current_df
         else:
             frames.append(current_df)
+        if index < len(target_ts_codes):
+            time.sleep(STK_REWARDS_REQUEST_INTERVAL_SECONDS)
 
     if frames:
         df = pd.concat(frames, ignore_index=True)
